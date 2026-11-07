@@ -1,9 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Week 2, Python Web App</title>
+    <title>Week 2: Python Web App</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 48px 16px;
+            background: #0d1117;
+            color: #c9d1d9;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        h1 { margin: 0; font-size: 30px; line-height: 1.2; color: #f0f6fc; }
+        h2 { color: #3fb950; font-size: 18px; }
+        a { color: #58a6ff; }
+
+        /* Terminal window */
+        .window { max-width: 760px; margin: 0 auto; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; }
+        .titlebar { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .titlebar .path { color: #8b949e; font-size: 13px; padding-left: 12px; }
+        .content { padding: 28px; }
+        .content > p, .content > pre, .content > .header, .content > .links { margin: 0 0 28px; }
+
+        /* Terminal text */
+        .prompt { display: block; color: #3fb950; margin-bottom: 4px; }
+        .comment { color: #8b949e; }
+        .ok { color: #3fb950; font-weight: 700; }
+        .cursor { color: #3fb950; animation: blink 1s steps(1) infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Header with Tux */
+        .header { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+        .header img { width: 110px; height: auto; }
+
+        /* Counter as MySQL output */
+        .sql { font-family: inherit; font-size: 16px; line-height: 1.4; }
+        .sql .num { color: #3fb950; font-weight: 700; }
+
+        /* Link buttons */
+        .links { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        .link { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 10px; text-decoration: none; color: #c9d1d9; transition: background 0.15s, transform 0.15s; }
+        .link:hover { transform: translateY(-2px); }
+        .link .label { font-size: 17px; font-weight: 700; }
+        .link .sub { font-size: 13px; }
+        .link.github { border: 1px solid #3fb950; background: #0f1a12; }
+        .link.github .label { color: #3fb950; }
+        .link.github:hover { background: #13261a; }
+        .link.week1 { border: 1px solid #58a6ff; background: #0d1626; }
+        .link.week1 .label { color: #58a6ff; }
+        .link.week1:hover { background: #12213a; }
+    </style>
+</head>
 </head>
 <body>
     <h1>Week 2, Python Web App</h1>
