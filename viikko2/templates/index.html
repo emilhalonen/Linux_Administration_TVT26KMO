@@ -74,9 +74,13 @@
                 <span class="comment"># Flask + Gunicorn + MySQL behind Nginx on CSC cPouta</span>
             </div>
         </div>
-    <h2>Visitor Counter</h2>
-    <p>Page loads: <strong>{{ visits }}</strong></p>
-    <p>Every page load increases the count by one.</p>
+    <span class="prompt">$ mysql -e "SELECT visits FROM counter;"</span>
+<pre class="sql">+--------+
+| visits |
++--------+
+| <span class="num">{{ "%6d"|format(visits) }}</span> |
++--------+
+<span class="comment">1 row in set · +1 on every page load</span></pre>
 
     <h2>How It Works</h2>
     <p>
