@@ -1,0 +1,15 @@
+[Unit]
+Description=Week 2 Flask app (Gunicorn)
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/linux-admin/viikko2
+EnvironmentFile=/home/ubuntu/linux-admin/viikko2/.env
+ExecStart=/home/ubuntu/linux-admin/viikko2/venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5000 app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
