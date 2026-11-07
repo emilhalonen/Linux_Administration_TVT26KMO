@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 2: Python Web App</title>
+</head>
+<body>
+    <h1>Week 2: Python Web App</h1>
+    <p>Flask + Gunicorn + MySQL behind Nginx on CSC cPouta.</p>
+
+    <h2>Visitor Counter</h2>
+    <p>Page loads: <strong>{{ visits }}</strong></p>
+    <p>Every page load increases the count by one.</p>
+
+    <h2>How It Works</h2>
+    <p>
+        Nginx listens on port 80 and forwards requests for the /viikko2/ path to the
+        Python application as a reverse proxy. The application runs on Gunicorn at
+        127.0.0.1:5000, so its port is not exposed to the internet for all. The application is
+        a systemd service that starts automatically when the server boots.
+    </p>
+
+    <h2>Counter Storage</h2>
+    <p>
+        The database is MySQL 8.0, running on the same server. The counter is stored in
+        the counter table of the viikko2 database, which has a single row. Every page
+        load runs UPDATE counter SET visits = visits + 1 and then reads the new value.
+        Because the value is stored in the database rather than in the application's
+        memory, it persists even if the application or the whole server is restarted.
+    </p>
+
+    <h2>Restart Test</h2>
+    <p>The test has not been done yet, i will update the result here after testing it.</p>
+
+    <h2>Links</h2>
+    <ul>
+        <li><a href="https://github.com/emilhalonen/Linux_Administration_TVT26KMO">Source code on GitHub</a></li>
+        <li><a href="/">Week 1 page</a></li>
+    </ul>
+</body>
+</html>
