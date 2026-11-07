@@ -82,7 +82,7 @@
 +--------+
 <span class="comment">1 row in set · +1 on every page load</span></pre>
 
-    <h2>How It Works</h2>
+    <span class="prompt">$ man how-it-works</span>
     <p>
         Nginx listens on port 80 and forwards requests for the /viikko2/ path to the
         Python application as a reverse proxy. The application runs on Gunicorn at
@@ -90,7 +90,7 @@
         a systemd service that starts automatically when the server boots.
     </p>
 
-    <h2>Counter Storage</h2>
+    <span class="prompt">$ man counter-storage</span>
     <p>
         The database is MySQL 8.0, running on the same server. The counter is stored in
         the counter table of the viikko2 database, which has a single row. Every page
@@ -99,7 +99,7 @@
         memory, it persists even if the application or the whole server is restarted.
     </p>
 
-    <h2>Restart Test</h2>
+    <span class="prompt">$ sudo reboot &amp;&amp; curl /viikko2/</span>
     <p>
         Before the restart, the counter was at 44. I rebooted the server with
         sudo reboot. After the reboot, the page loaded without any manual steps
