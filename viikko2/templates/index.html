@@ -22,9 +22,17 @@
 
         /* Terminal window */
         .window { max-width: 760px; margin: 0 auto; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; }
-        .titlebar { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; }
-        .titlebar .path { color: #8b949e; font-size: 13px; padding-left: 12px; }
+        .titlebar { background: #202020; height: 46px; padding: 0 0 0 8px; display: flex; align-items: flex-end; gap: 4px; user-select: none; }
+        .tab { background: #0d1117; color: #f0f0f0; height: 38px; padding: 0 12px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 10px; font-family: "Segoe UI", system-ui, sans-serif; font-size: 13px; width: 260px; }
+        .tab-icon { flex-shrink: 0; width: 18px; height: 18px; border-radius: 4px; background: #2d2d2d; color: #f0f0f0; font-family: "JetBrains Mono", monospace; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .tab-title { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tab-close { color: #a0a0a0; font-size: 12px; }
+        .tab-actions { height: 38px; display: flex; align-items: center; gap: 18px; padding: 0 12px; color: #c0c0c0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 18px; }
+        .tab-actions .chevron { font-size: 12px; }
+        .win-controls { margin-left: auto; align-self: stretch; display: flex; }
+        .win-controls span { width: 46px; display: flex; align-items: center; justify-content: center; color: #c0c0c0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 14px; }
+        .win-controls span:hover { background: #333333; }
+        .win-controls .close:hover { background: #c42b1c; color: #ffffff; }
         .content { padding: 28px; }
         .content > p, .content > pre, .content > .header, .content > .links { margin: 0 0 28px; }
 
@@ -60,16 +68,26 @@
 <body>
 <div class="window">
     <div class="titlebar">
-        <span class="dot" style="background:#f85149"></span>
-        <span class="dot" style="background:#d29922"></span>
-        <span class="dot" style="background:#3fb950"></span>
-        <span class="path">ubuntu@week2: ~/viikko2</span>
+        <div class="tab">
+            <span class="tab-icon">&gt;_</span>
+            <span class="tab-title">ubuntu@week2: ~/linux-admin/viikko2</span>
+            <span class="tab-close">✕</span>
+        </div>
+        <div class="tab-actions">
+            <span>+</span>
+            <span class="chevron">⌄</span>
+        </div>
+        <div class="win-controls">
+            <span>─</span>
+            <span>☐</span>
+            <span class="close">✕</span>
+        </div>
     </div>
     <div class="content">
         <div class="header">
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/1200px-Tux.svg.png" alt="Tux, the Linux mascot">
             <div>
-                              <span class="prompt">$ cat README</span>
+                <span class="prompt">$ cat README</span>
                 <h1>Week 2: Python Web App</h1>
                 <span class="comment"># Flask + Gunicorn + MySQL behind Nginx on CSC cPouta</span>
             </div>
