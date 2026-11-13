@@ -113,7 +113,7 @@ cat > "$tmp_file" << HTML
     <div class="titlebar">
         <div class="tab">
             <span class="tab-icon">&gt;_</span>
-            <span class="tab-title">ubuntu@week2: ~/linux-admin/viikko3</span>
+            <span class="tab-title">viikko3 – server status report</span>
             <span class="tab-close">✕</span>
         </div>
         <div class="tab-actions">
@@ -194,8 +194,8 @@ cat > "$tmp_file" << HTML
                 <tr><td>80 %</td><td>WARNING</td><td class="WARNING">WARNING</td></tr>
                 <tr><td>90 %</td><td>WARNING</td><td class="WARNING">WARNING</td></tr>
             </table>
-            <p style="margin-top: 12px;"><span class="key">Automatic updates:</span> TODO: two generation times in a row.</p>
-            <p style="margin-top: 12px;"><span class="key">Reboot test:</span> TODO: reboot time and result.</p>
+            <p style="margin-top: 12px;"><span class="key">Automatic updates:</span> The timer generated the report automatically every minute, for example at 17:43:00, 17:44:00 and 17:45:00, without running the script manually. I checked this on the page and with <code>journalctl -u status-report.service</code>, which shows a "Finished" line for every run.</p>
+            <p style="margin-top: 12px;"><span class="key">Reboot test:</span> I rebooted the server with <code>sudo reboot</code> at 17:41. <code>journalctl --list-boots</code> shows that the old boot ended at 17:41:32 and the new one started at 17:41:48. After the reboot, the Week 1, Week 2 and Week 3 pages all opened without any manual steps, and the report continued to update every minute (17:43:00, 17:44:00 and onwards). The uptime on the report started from zero, which also shows that the server had restarted.</p>
         </div>
 
         <div class="block">
