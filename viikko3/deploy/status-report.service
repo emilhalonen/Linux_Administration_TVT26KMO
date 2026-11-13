@@ -1,0 +1,7 @@
+[Unit]
+Description=Generate the week 3 server status report
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/home/ubuntu/linux-admin/viikko3/status_report.sh
