@@ -1,7 +1,7 @@
 [Unit]
 Description=Week 2 Flask app (Gunicorn)
 After=network.target mysql.service
-Requires=mysql.service
+Wants=mysql.service
 
 [Service]
 User=ubuntu
