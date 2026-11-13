@@ -11,9 +11,9 @@ WARNING_LIMIT=80
 disk_status() {
     local usage=$1
     if [ "$usage" -ge "$WARNING_LIMIT" ]; then
-        echo "Warning!"
+        echo "WARNING"
     else
-        echo "Ok!"
+        echo "OK"
     fi
 }
 
