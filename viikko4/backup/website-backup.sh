@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -uo pipefail
 
 SOURCE_HOST="ubuntu@192.168.1.228"
