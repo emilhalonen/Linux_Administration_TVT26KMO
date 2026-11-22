@@ -117,70 +117,64 @@
 <span class="key">super_read_only    </span> : <span class="OK">{{ super_read_only }}</span>
 <span class="key">Value read at      </span> : {{ queried_at }}</pre>
             <p class="notice" style="margin-top: 12px;">
-                This is a read-only copy. The counter only grows when someone opens the
-                <a href="http://195.148.21.192/viikko2/">week 2 page on server A</a>.
-                Replication copies the new value here within a second. Reloading this page
-                only reads the value, so the number stays the same.
+                This page only reads the counter and never changes it. The value increases on the
+                <a href="http://195.148.21.192/viikko2/">week 2 page on server A</a>, and replication
+                copies the new value here within about a second.
             </p>
         </div>
 
         <div class="block">
             <span class="prompt">$ man how-server-b-was-created</span>
-            <p>
-                In cPouta I took a snapshot of server A called <code>server-a</code> and launched a new
-                instance <code>server-b</code> from it, with the same flavor (standard.tiny) and security
-                groups. Server B got its own floating IP <code>128.214.255.14</code> and the internal IP
-                <code>192.168.1.118</code>. Server A is <code>195.148.21.192</code> /
-                <code>192.168.1.228</code>, and its week 2 and week 3 pages kept running the whole time.
-            </p>
-            <p style="margin-top: 12px;">After cloning, I made B its own server:</p>
-            <ul style="margin-top: 8px;">
-                <li>Changed the hostname to <code>server-b</code>.</li>
-                <li>Disabled the copied week 2 app with <code>systemctl disable --now viikko2</code>, because on B the counter must never be written.</li>
-                <li>Deleted <code>/var/lib/mysql/auto.cnf</code>, so MySQL created a new <code>server_uuid</code>. The clone had the same UUID as A, and replication does not work if the source and the replica share one.</li>
+            <ul>
+                <li>I created a snapshot of server A in cPouta and launched a new instance, <code>server-b</code>, from it.</li>
+                <li>Server B has its own floating IP <code>128.214.255.14</code> (internal <code>192.168.1.118</code>). Server A is <code>195.148.21.192</code> (internal <code>192.168.1.228</code>).</li>
+                <li>I changed the hostname to <code>server-b</code>.</li>
+                <li>I disabled the copied week 2 app on B, since B must never modify the counter.</li>
+                <li>I deleted <code>/var/lib/mysql/auto.cnf</code> so that MySQL generated a new <code>server_uuid</code> for B. The clone had the same ID as A, which prevents replication from working.</li>
+                <li>Server A and its week 2 and week 3 pages remained online throughout.</li>
             </ul>
         </div>
 
         <div class="block">
             <span class="prompt">$ ls -l storage-layout/</span>
-            <p>All backups are stored outside <code>/var/www/html</code>, so Nginx can never serve them.</p>
+            <p>Backups and credentials are kept outside <code>/var/www/html</code>, so Nginx can never serve them to visitors.</p>
             <div class="table-wrap">
             <table>
                 <tr><th>Path on server B</th><th>Owner</th><th>Mode</th><th>Purpose</th></tr>
-                <tr><td><code>/var/backups/website-from-a/</code></td><td>root:root</td><td>700</td><td>Backup archives <code>html_YYYY-MM-DD_HHMMSS.tar.gz</code> (each 600)</td></tr>
-                <tr><td><code>/var/log/website-backup.log</code></td><td>root:root</td><td>600</td><td>One OK or FAILED line per backup run</td></tr>
+                <tr><td><code>/var/backups/website-from-a/</code></td><td>root:root</td><td>700</td><td>Backup archives <code>html_YYYY-MM-DD_HHMMSS.tar.gz</code> (600)</td></tr>
+                <tr><td><code>/var/log/website-backup.log</code></td><td>root:root</td><td>600</td><td>Backup log, one line per run</td></tr>
                 <tr><td><code>/usr/local/sbin/website-backup.sh</code></td><td>root:root</td><td>750</td><td>Backup script</td></tr>
-                <tr><td><code>/etc/cron.d/website-backup</code></td><td>root:root</td><td>644</td><td>Hourly schedule</td></tr>
-                <tr><td><code>/root/.ssh/backup_ed25519</code></td><td>root:root</td><td>600</td><td>SSH key used only for pulling backups from A</td></tr>
-                <tr><td><code>/etc/viikko4.env</code></td><td>root:root</td><td>600</td><td>Database password for this page</td></tr>
-                <tr><td><code>/etc/mysql/mysql.conf.d/replication.cnf</code></td><td>root:root</td><td>644</td><td>Replica settings</td></tr>
+                <tr><td><code>/etc/cron.d/website-backup</code></td><td>root:root</td><td>644</td><td>Backup schedule</td></tr>
+                <tr><td><code>/root/.ssh/backup_ed25519</code></td><td>root:root</td><td>600</td><td>SSH key used only for backups</td></tr>
+                <tr><td><code>/etc/viikko4.env</code></td><td>root:root</td><td>600</td><td>Database credentials for this page</td></tr>
+                <tr><td><code>/etc/mysql/mysql.conf.d/replication.cnf</code></td><td>root:root</td><td>644</td><td>Replica configuration</td></tr>
                 <tr><td><code>/var/lib/mysql/</code></td><td>mysql:mysql</td><td>700</td><td>Replicated database and relay logs</td></tr>
             </table>
             </div>
+            <p style="margin-top: 10px;">Modes 700 and 600 mean that only the owner has access, so normal users cannot read the backups.</p>
         </div>
 
         <div class="block">
             <span class="prompt">$ man users-and-permissions</span>
             <p><span class="key">Linux users:</span></p>
             <ul style="margin-top: 8px;">
-                <li><code>root</code> on B runs the backup from cron and owns the backup key, the archives and the log. Normal users cannot read them.</li>
-                <li><code>ubuntu</code> on A is the account the backup logs in to. In A's <code>authorized_keys</code> the backup key has <code>from="192.168.1.118"</code>, so the key only works from server B. The website files are world-readable, so no sudo is needed on A.</li>
-                <li><code>ubuntu</code> on B runs this page as a systemd service. The service reads its password from <code>/etc/viikko4.env</code>, which only root can read.</li>
+                <li><code>root</code> on B runs the backup job and owns the archives, the SSH key and the log.</li>
+                <li><code>ubuntu</code> on A is the account the backup connects to. In A's <code>authorized_keys</code> the backup key is restricted with <code>from="192.168.1.118"</code>, so it only works from server B.</li>
+                <li><code>ubuntu</code> on B runs this page as a systemd service.</li>
                 <li><code>mysql</code> owns the database files on both servers.</li>
             </ul>
             <p style="margin-top: 12px;"><span class="key">Database users:</span></p>
             <div class="table-wrap">
             <table>
                 <tr><th>Server</th><th>User</th><th>Privileges</th></tr>
-                <tr><td>A</td><td><code>replicator@192.168.1.118</code></td><td>Only <code>REPLICATION SLAVE</code>: can read the binary log but not the tables, and only from B's address</td></tr>
-                <tr><td>A</td><td><code>viikko2@localhost</code></td><td>Week 2 app, reads and updates the counter</td></tr>
-                <tr><td>B</td><td><code>viikko4_reader@localhost</code></td><td>Only <code>SELECT</code> on <code>viikko2.counter</code></td></tr>
+                <tr><td>A</td><td><code>replicator@192.168.1.118</code></td><td>Replication only (<code>REPLICATION SLAVE</code>), allowed only from server B</td></tr>
+                <tr><td>A</td><td><code>viikko2@localhost</code></td><td>Week 2 app: reads and updates the counter</td></tr>
+                <tr><td>B</td><td><code>viikko4_reader@localhost</code></td><td>Read-only access to the counter table (<code>SELECT</code>)</td></tr>
             </table>
             </div>
             <p style="margin-top: 12px;">
-                On B the copied <code>viikko2</code> user was removed, and the whole server runs with
-                <code>super_read_only = ON</code>. Even root gets <code>ERROR 1290</code> when trying to change
-                the counter. Only the replication thread can apply changes from A.
+                MySQL on B runs with <code>super_read_only = ON</code>, so not even root can modify the data.
+                Only the replication process is allowed to apply changes from A.
             </p>
         </div>
 
@@ -188,43 +182,36 @@
             <span class="prompt">$ cat /etc/cron.d/website-backup</span>
 <pre><span class="comment"># Back up server A's /var/www/html to server B once per hour (at minute 30).</span>
 30 * * * * root /usr/local/sbin/website-backup.sh</pre>
-            <p style="margin-top: 12px;">
-                Server B <em>pulls</em> the backup from A, so A does not need any access to B. Every hour at
-                minute 30 the script runs <code>tar</code> on A over SSH and saves the stream as a timestamped
-                archive on B. I chose minute 30 because the week 3 report on A is rewritten at the start of
-                every minute, and :30 is far from the full hour when other jobs usually run.
-            </p>
-            <ul style="margin-top: 8px;">
-                <li>The archive is first saved as <code>.part</code> and checked with <code>tar -tzf</code>. Only a working archive is renamed to <code>.tar.gz</code>, so broken copy never looks like a real backup.</li>
-                <li>Every run writes <code>OK</code> with the file name and size, or <code>FAILED</code>, to the log.</li>
-                <li>The newest 48 archives are kept, which is two days of hourly backups. Older ones are deleted.</li>
-                <li><code>umask 077</code> makes every new file readable by root only.</li>
+            <ul style="margin-top: 12px;">
+                <li>Cron runs the backup script every hour at minute 30.</li>
+                <li>Server B pulls <code>/var/www/html</code> from A over SSH and saves it as a timestamped <code>.tar.gz</code> archive.</li>
+                <li>Each archive is verified before it is saved, so a broken copy is never kept.</li>
+                <li>Every run logs either <code>OK</code> or <code>FAILED</code>.</li>
+                <li>The 48 most recent backups (two days) are kept, and older ones are removed automatically.</li>
             </ul>
         </div>
 
         <div class="block">
             <span class="prompt">$ man replication</span>
             <p>
-                The assignment mentions MariaDB, but my servers already ran MySQL 8.0 from the week 2, so I used
-                MySQL replication instead. The idea is the same, only some commands have new names, for example
-                <code>CHANGE REPLICATION SOURCE TO</code> instead of <code>CHANGE MASTER TO</code>.
+                The weekly task refers to MariaDB, but my servers were already running MySQL 8.0 from week 2,
+                so I used MySQL replication instead. Anyways the principle is the same :)
             </p>
             <ul style="margin-top: 8px;">
-                <li><span class="key">Server A</span> writes every change to a binary log (<code>log_bin</code>, <code>binlog_format = ROW</code>, <code>server-id = 1</code>). MySQL listens only on localhost and the internal address <code>192.168.1.228</code>, not on the public IP.</li>
-                <li><span class="key">Server B</span> (<code>server-id = 2</code>) connects to A as <code>replicator</code>, copies the log into its relay log and applies the changes. <code>replicate-do-db = viikko2</code> limits replication to the counter database.</li>
-                <li>To start, I made a dump of A with <code>mysqldump --single-transaction --source-data=2</code>. It saves the binary log position (<code>mysql-bin.000001</code>, 1056), so B knows exactly where to continue. The dump was deleted after importing it.</li>
-                <li><code>GET_SOURCE_PUBLIC_KEY = 1</code> is needed because MySQL 8 uses the <code>caching_sha2_password</code> login method.</li>
+                <li><span class="key">Server A</span> records every database change in a binary log.</li>
+                <li><span class="key">Server B</span> connects to A as <code>replicator</code>, reads the log and applies the same changes to its own copy.</li>
+                <li>Only the <code>viikko2</code> database is replicated.</li>
+                <li>MySQL on A is reachable only from the internal network, not from the internet.</li>
+                <li>To get started, I copied the database from A to B with <code>mysqldump</code>. Since then, replication has kept B up to date. The dump file was deleted afterwards.</li>
             </ul>
         </div>
 
         <div class="block">
             <span class="prompt">$ man replication-vs-backup</span>
             <p>
-                Replication is not a backup. It copies every change to B within a second, including also mistakes.
-                If someone runs <code>DELETE</code> or <code>DROP TABLE</code> on A, the same thing happens on
-                B right away, and there is no older version to go back on. Replication protects against losing
-                a server, but backups protect against losing the data. That is why the website files are backed up
-                as timestamped archives, which keep the history of the last two days.
+                Replication does not replace backups. It copies every change to B immediately, including mistakes:
+                if a table is deleted on A, it disappears from B as well. Backups store earlier versions,
+                so the data can be restored after an error.
             </p>
         </div>
 
@@ -234,10 +221,10 @@
             <table>
                 <tr><th>Test</th><th>Result</th></tr>
                 <tr><td>Both pages are public</td><td class="pending">TODO</td></tr>
-                <tr><td>Loading A updates B</td><td>B showed 85. After four page loads on A, B showed 89 without doing anything on B. <span class="OK">OK</span></td></tr>
+                <tr><td>Loading A updates B</td><td>B showed 85. After four page loads on A, B showed 89. <span class="OK">OK</span></td></tr>
                 <tr><td>Loading B does not increment</td><td class="pending">TODO</td></tr>
-                <tr><td>B is read-only</td><td><code>UPDATE viikko2.counter ...</code> as root on B: <code>ERROR 1290 ... --super-read-only</code>. <span class="OK">OK</span></td></tr>
-                <tr><td>Replication status</td><td><code>Replica_IO_Running: Yes</code>, <code>Replica_SQL_Running: Yes</code>, <code>Seconds_Behind_Source: 0</code>, no errors. <span class="OK">OK</span></td></tr>
+                <tr><td>B is read-only</td><td>Updating the counter as root on B failed with <code>ERROR 1290 ... --super-read-only</code>. <span class="OK">OK</span></td></tr>
+                <tr><td>Replication status</td><td><code>Replica_IO_Running: Yes</code>, <code>Replica_SQL_Running: Yes</code>, <code>Seconds_Behind_Source: 0</code>. <span class="OK">OK</span></td></tr>
                 <tr><td>Two scheduled backups</td><td class="pending">TODO</td></tr>
                 <tr><td>Restore test</td><td class="pending">TODO</td></tr>
                 <tr><td>Reboot of server B</td><td class="pending">TODO</td></tr>
@@ -248,14 +235,11 @@
         <div class="block">
             <span class="prompt">$ cat lesson-learned.txt</span>
             <p>
-                After writing B's <code>replication.cnf</code> with nano and restarting MySQL,
-                <code>SELECT @@server_id, @@read_only</code> still returned 1 and 0. The file looked fine in
-                nano, but <code>cat</code> showed that all settings were on one long line. The line breaks
-                were lost when I pasted the text, and MySQL ignored the broken line without any error.
-                <code>my_print_defaults mysqld</code> confirmed that MySQL did not read my settings. I wrote
-                the file again with <code>printf '%s\n' ... | sudo tee</code>, checked it with
-                <code>cat -A</code> (every line must end with <code>$</code>), and after a restart the result was
-                2, 1, 1. The lesson: always check that a config change is really in use =D
+                After editing B's MySQL configuration with nano and restarting MySQL, the new settings had no effect.
+                Running <code>cat</code> on the file showed that all settings were on a single line: the line
+                breaks had been lost when I pasted the text, and MySQL silently ignored the line. I rewrote the
+                file with <code>printf</code>, verified it with <code>cat -A</code>, and after a restart the
+                settings were active. The lesson: always confirm that a configuration change is actually in use =D
             </p>
         </div>
 
