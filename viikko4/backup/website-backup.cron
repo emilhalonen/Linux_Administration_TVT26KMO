@@ -1,0 +1,5 @@
+#Back up server A's /var/www/html to server B once per hour at minute 30.
+#Minute 30 avoids the week 3 report, which is rewritten on A at minute 00.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+30 * * * * root /usr/local/sbin/website-backup.sh
