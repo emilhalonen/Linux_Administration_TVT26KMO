@@ -225,9 +225,9 @@
                 <tr><td>Loading B does not increment</td><td>Five loads of B all showed 93. One load of A raised the counter to 94, and B showed 94 straight after. <span class="OK">OK</span></td></tr>
                 <tr><td>B is read-only</td><td>Updating the counter as root on B failed with <code>ERROR 1290 ... --super-read-only</code>. <span class="OK">OK</span></td></tr>
                 <tr><td>Replication status</td><td><code>Replica_IO_Running: Yes</code>, <code>Replica_SQL_Running: Yes</code>, <code>Seconds_Behind_Source: 0</code>. <span class="OK">OK</span></td></tr>
-                <tr><td>Two scheduled backups</td><td class="pending">TODO</td></tr>
+                <tr><td>Two scheduled backups</td><td>Cron created three backups automatically: <code>17:30:11</code>, <code>18:30:02</code> and <code>19:30:03</code>, all logged as <code>OK</code> (about 20 KB each, mode 600, owner root). <span class="OK">OK</span></td></tr>
                 <tr><td>Restore test</td><td>I extracted <code>html/index.html</code> from <code>html_2026-11-22_153146.tar.gz</code> into <code>/tmp/restore-test</code>. Its <code>sha256sum</code> matched the original file on A (<code>e4998574…f2c5</code>). <span class="OK">OK</span></td></tr>
-                <tr><td>Reboot of server B</td><td class="pending">TODO</td></tr>
+                <tr><td>Reboot of server B</td><td>I rebooted B with <code>sudo reboot</code> at 19:38. After the reboot, <code>mysql</code>, <code>viikko4</code>, <code>nginx</code> and <code>cron</code> were all active, replication was running again (<code>Yes</code>, <code>Yes</code>, <code>0</code>), and loading A raised the counter to 97, which B showed straight away. <span class="OK">OK</span></td></tr>
             </table>
             </div>
         </div>
