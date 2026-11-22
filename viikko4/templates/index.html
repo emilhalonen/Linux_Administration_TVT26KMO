@@ -220,13 +220,13 @@
             <div class="table-wrap">
             <table>
                 <tr><th>Test</th><th>Result</th></tr>
-                <tr><td>Both pages are public</td><td class="pending">TODO</td></tr>
+                <tr><td>Both pages are public</td><td>From my computer, <code>curl -w "%{http_code}"</code> returned 200 for both <code>/viikko2/</code> on A and <code>/viikko4/</code> on B. <span class="OK">OK</span></td></tr>
                 <tr><td>Loading A updates B</td><td>B showed 85. After four page loads on A, B showed 89. <span class="OK">OK</span></td></tr>
-                <tr><td>Loading B does not increment</td><td class="pending">TODO</td></tr>
+                <tr><td>Loading B does not increment</td><td>Five loads of B all showed 93. One load of A raised the counter to 94, and B showed 94 straight after. <span class="OK">OK</span></td></tr>
                 <tr><td>B is read-only</td><td>Updating the counter as root on B failed with <code>ERROR 1290 ... --super-read-only</code>. <span class="OK">OK</span></td></tr>
                 <tr><td>Replication status</td><td><code>Replica_IO_Running: Yes</code>, <code>Replica_SQL_Running: Yes</code>, <code>Seconds_Behind_Source: 0</code>. <span class="OK">OK</span></td></tr>
                 <tr><td>Two scheduled backups</td><td class="pending">TODO</td></tr>
-                <tr><td>Restore test</td><td class="pending">TODO</td></tr>
+                <tr><td>Restore test</td><td>I extracted <code>html/index.html</code> from <code>html_2026-11-22_153146.tar.gz</code> into <code>/tmp/restore-test</code>. Its <code>sha256sum</code> matched the original file on A (<code>e4998574…f2c5</code>). <span class="OK">OK</span></td></tr>
                 <tr><td>Reboot of server B</td><td class="pending">TODO</td></tr>
             </table>
             </div>
@@ -240,6 +240,11 @@
                 breaks had been lost when I pasted the text, and MySQL silently ignored the line. I rewrote the
                 file with <code>printf</code>, verified it with <code>cat -A</code>, and after a restart the
                 settings were active. The lesson: always confirm that a configuration change is actually in use =D
+            </p>
+            <p style="margin-top: 12px;">
+                The same lesson came up again with cron: the first scheduled backup at 16:30 never ran. The cron
+                file had no newline after its last line, and cron ignores a final line without one. After adding
+                the newline, I checked the end of the installed file with <code>tail -c 1 ... | od -c</code>.
             </p>
         </div>
 
