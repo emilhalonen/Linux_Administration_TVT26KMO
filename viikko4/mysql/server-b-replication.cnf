@@ -1,0 +1,8 @@
+# Server B (replica): /etc/mysql/mysql.conf.d/replication.cnf
+[mysqld]
+server-id = 2
+relay_log = mysql-relay-bin
+replicate-do-db = viikko2
+read_only = ON
+super_read_only = ON
+bind-address = 127.0.0.1

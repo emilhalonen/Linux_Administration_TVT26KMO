@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 4: Read-only replica</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 48px 16px; background: #0d1117; color: #c9d1d9; font-family: "JetBrains Mono", monospace; font-size: 15px; line-height: 1.6; }
+        h1 { margin: 0; font-size: 30px; line-height: 1.2; color: #f0f6fc; }
+        a { color: #58a6ff; }
+        p { margin: 0; }
+        code { color: #f0f6fc; background: #161b22; padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+
+        /* Terminal window */
+        .window { max-width: 860px; margin: 0 auto; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; }
+        .titlebar { background: #202020; height: 46px; padding: 0 0 0 8px; display: flex; align-items: flex-end; gap: 4px; user-select: none; }
+        .tab { background: #0d1117; color: #f0f0f0; height: 38px; padding: 0 12px; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 10px; font-family: "Segoe UI", system-ui, sans-serif; font-size: 13px; width: 280px; }
+        .tab-icon { flex-shrink: 0; width: 18px; height: 18px; border-radius: 4px; background: #2d2d2d; color: #f0f0f0; font-family: "JetBrains Mono", monospace; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .tab-title { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tab-close { color: #a0a0a0; font-size: 12px; }
+        .tab-actions { height: 38px; display: flex; align-items: center; gap: 18px; padding: 0 12px; color: #c0c0c0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 18px; }
+        .tab-actions .chevron { font-size: 12px; }
+        .win-controls { margin-left: auto; align-self: stretch; display: flex; }
+        .win-controls span { width: 46px; display: flex; align-items: center; justify-content: center; color: #c0c0c0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 14px; }
+        .win-controls span:hover { background: #333333; }
+        .win-controls .close:hover { background: #c42b1c; color: #ffffff; }
+        .content { padding: 28px; }
+        .block { margin-bottom: 30px; }
+
+        /* Terminal text */
+        .prompt { display: block; color: #3fb950; margin-bottom: 6px; }
+        .comment { color: #8b949e; }
+        .key { color: #d29922; }
+        .OK { color: #3fb950; font-weight: 700; }
+        .pending { color: #f85149; font-weight: 700; }
+        .cursor { color: #3fb950; animation: blink 1s steps(1) infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        pre { margin: 0; font-family: inherit; white-space: pre-wrap; }
+
+        /* Header with Tux and read-only badge */
+        .header { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+        .header img { width: 110px; height: auto; }
+        .badge { display: inline-block; margin-top: 10px; padding: 4px 12px; border: 1px solid #d29922; border-radius: 6px; background: #261d0b; color: #d29922; font-weight: 700; font-size: 14px; }
+        .notice { border-left: 4px solid #d29922; background: #161b22; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+
+        /* Counter as MySQL output */
+        .sql { font-size: 16px; line-height: 1.4; }
+        .sql .num { color: #3fb950; font-weight: 700; }
+
+        /* Documentation */
+        ul { margin: 0; padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        .table-wrap { overflow-x: auto; margin-top: 10px; }
+        table { border-collapse: collapse; }
+        th, td { border: 1px solid #30363d; padding: 6px 12px; text-align: left; vertical-align: top; }
+        th { color: #d29922; }
+
+        /* Link buttons */
+        .links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+        .link { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 10px; text-decoration: none; color: #c9d1d9; transition: background 0.15s, transform 0.15s; }
+        .link:hover { transform: translateY(-2px); }
+        .link .label { font-size: 16px; font-weight: 700; }
+        .link .sub { font-size: 13px; }
+        .link.github { border: 1px solid #3fb950; background: #0f1a12; }
+        .link.github .label { color: #3fb950; }
+        .link.week { border: 1px solid #58a6ff; background: #0d1626; }
+        .link.week .label { color: #58a6ff; }
+        .link.replica { border: 1px solid #d29922; background: #1d170b; }
+        .link.replica .label { color: #d29922; }
+    </style>
+</head>
+<body>
+<div class="window">
+    <div class="titlebar">
+        <div class="tab">
+            <span class="tab-icon">&gt;_</span>
+            <span class="tab-title">ubuntu@server-b: ~/linux-admin/viikko4</span>
+            <span class="tab-close">✕</span>
+        </div>
+        <div class="tab-actions">
+            <span>+</span>
+            <span class="chevron">⌄</span>
+        </div>
+        <div class="win-controls">
+            <span>─</span>
+            <span>☐</span>
+            <span class="close">✕</span>
+        </div>
+    </div>
+    <div class="content">
+
+        <div class="block header">
+            <img src="/tux.svg" alt="Tux, the Linux mascot">
+            <div>
+                <span class="prompt">$ cat README</span>
+                <h1>Week 4: Read-only replica</h1>
+                <span class="comment"># Server B · backups and MySQL replication from server A</span><br>
+                <span class="badge">READ-ONLY REPLICA · this page never changes the counter</span>
+            </div>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ mysql -e "SELECT visits FROM counter;"</span>
+<pre class="sql">+--------+
+| visits |
++--------+
+| <span class="num">{{ "%6d"|format(visits) }}</span> |
++--------+
+<span class="comment">1 row in set · read from the local replica on server B</span></pre>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ mysql -e "SELECT @@hostname, @@server_id, @@super_read_only, NOW();"</span>
+<pre><span class="key">Database server    </span> : {{ hostname }} (server_id {{ server_id }})
+<span class="key">super_read_only    </span> : <span class="OK">{{ super_read_only }}</span>
+<span class="key">Value read at      </span> : {{ queried_at }}</pre>
+            <p class="notice" style="margin-top: 12px;">
+                This is a read-only copy. The counter only grows when someone opens the
+                <a href="http://195.148.21.192/viikko2/">week 2 page on server A</a>.
+                Replication copies the new value here within a second. Reloading this page
+                only reads the value, so the number stays the same.
+            </p>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ man how-server-b-was-created</span>
+            <p>
+                In cPouta I took a snapshot of server A called <code>server-a</code> and launched a new
+                instance <code>server-b</code> from it, with the same flavor (standard.tiny) and security
+                groups. Server B got its own floating IP <code>128.214.255.14</code> and the internal IP
+                <code>192.168.1.118</code>. Server A is <code>195.148.21.192</code> /
+                <code>192.168.1.228</code>, and its week 2 and week 3 pages kept running the whole time.
+            </p>
+            <p style="margin-top: 12px;">After cloning, I made B its own server:</p>
+            <ul style="margin-top: 8px;">
+                <li>Changed the hostname to <code>server-b</code>.</li>
+                <li>Disabled the copied week 2 app with <code>systemctl disable --now viikko2</code>, because on B the counter must never be written.</li>
+                <li>Deleted <code>/var/lib/mysql/auto.cnf</code>, so MySQL created a new <code>server_uuid</code>. The clone had the same UUID as A, and replication does not work if the source and the replica share one.</li>
+            </ul>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ ls -l storage-layout/</span>
+            <p>All backups are stored outside <code>/var/www/html</code>, so Nginx can never serve them.</p>
+            <div class="table-wrap">
+            <table>
+                <tr><th>Path on server B</th><th>Owner</th><th>Mode</th><th>Purpose</th></tr>
+                <tr><td><code>/var/backups/website-from-a/</code></td><td>root:root</td><td>700</td><td>Backup archives <code>html_YYYY-MM-DD_HHMMSS.tar.gz</code> (each 600)</td></tr>
+                <tr><td><code>/var/log/website-backup.log</code></td><td>root:root</td><td>600</td><td>One OK or FAILED line per backup run</td></tr>
+                <tr><td><code>/usr/local/sbin/website-backup.sh</code></td><td>root:root</td><td>750</td><td>Backup script</td></tr>
+                <tr><td><code>/etc/cron.d/website-backup</code></td><td>root:root</td><td>644</td><td>Hourly schedule</td></tr>
+                <tr><td><code>/root/.ssh/backup_ed25519</code></td><td>root:root</td><td>600</td><td>SSH key used only for pulling backups from A</td></tr>
+                <tr><td><code>/etc/viikko4.env</code></td><td>root:root</td><td>600</td><td>Database password for this page</td></tr>
+                <tr><td><code>/etc/mysql/mysql.conf.d/replication.cnf</code></td><td>root:root</td><td>644</td><td>Replica settings</td></tr>
+                <tr><td><code>/var/lib/mysql/</code></td><td>mysql:mysql</td><td>700</td><td>Replicated database and relay logs</td></tr>
+            </table>
+            </div>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ man users-and-permissions</span>
+            <p><span class="key">Linux users:</span></p>
+            <ul style="margin-top: 8px;">
+                <li><code>root</code> on B runs the backup from cron and owns the backup key, the archives and the log. Normal users cannot read them.</li>
+                <li><code>ubuntu</code> on A is the account the backup logs in to. In A's <code>authorized_keys</code> the backup key has <code>from="192.168.1.118"</code>, so the key only works from server B. The website files are world-readable, so no sudo is needed on A.</li>
+                <li><code>ubuntu</code> on B runs this page as a systemd service. The service reads its password from <code>/etc/viikko4.env</code>, which only root can read.</li>
+                <li><code>mysql</code> owns the database files on both servers.</li>
+            </ul>
+            <p style="margin-top: 12px;"><span class="key">Database users:</span></p>
+            <div class="table-wrap">
+            <table>
+                <tr><th>Server</th><th>User</th><th>Privileges</th></tr>
+                <tr><td>A</td><td><code>replicator@192.168.1.118</code></td><td>Only <code>REPLICATION SLAVE</code>: can read the binary log but not the tables, and only from B's address</td></tr>
+                <tr><td>A</td><td><code>viikko2@localhost</code></td><td>Week 2 app, reads and updates the counter</td></tr>
+                <tr><td>B</td><td><code>viikko4_reader@localhost</code></td><td>Only <code>SELECT</code> on <code>viikko2.counter</code></td></tr>
+            </table>
+            </div>
+            <p style="margin-top: 12px;">
+                On B the copied <code>viikko2</code> user was removed, and the whole server runs with
+                <code>super_read_only = ON</code>. Even root gets <code>ERROR 1290</code> when trying to change
+                the counter. Only the replication thread can apply changes from A.
+            </p>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ cat /etc/cron.d/website-backup</span>
+<pre><span class="comment"># Back up server A's /var/www/html to server B once per hour (at minute 30).</span>
+30 * * * * root /usr/local/sbin/website-backup.sh</pre>
+            <p style="margin-top: 12px;">
+                Server B <em>pulls</em> the backup from A, so A does not need any access to B. Every hour at
+                minute 30 the script runs <code>tar</code> on A over SSH and saves the stream as a timestamped
+                archive on B. I chose minute 30 because the week 3 report on A is rewritten at the start of
+                every minute, and :30 is far from the full hour when other jobs usually run.
+            </p>
+            <ul style="margin-top: 8px;">
+                <li>The archive is first saved as <code>.part</code> and checked with <code>tar -tzf</code>. Only a working archive is renamed to <code>.tar.gz</code>, so broken copy never looks like a real backup.</li>
+                <li>Every run writes <code>OK</code> with the file name and size, or <code>FAILED</code>, to the log.</li>
+                <li>The newest 48 archives are kept, which is two days of hourly backups. Older ones are deleted.</li>
+                <li><code>umask 077</code> makes every new file readable by root only.</li>
+            </ul>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ man replication</span>
+            <p>
+                The assignment mentions MariaDB, but my servers already ran MySQL 8.0 from the week 2, so I used
+                MySQL replication instead. The idea is the same, only some commands have new names, for example
+                <code>CHANGE REPLICATION SOURCE TO</code> instead of <code>CHANGE MASTER TO</code>.
+            </p>
+            <ul style="margin-top: 8px;">
+                <li><span class="key">Server A</span> writes every change to a binary log (<code>log_bin</code>, <code>binlog_format = ROW</code>, <code>server-id = 1</code>). MySQL listens only on localhost and the internal address <code>192.168.1.228</code>, not on the public IP.</li>
+                <li><span class="key">Server B</span> (<code>server-id = 2</code>) connects to A as <code>replicator</code>, copies the log into its relay log and applies the changes. <code>replicate-do-db = viikko2</code> limits replication to the counter database.</li>
+                <li>To start, I made a dump of A with <code>mysqldump --single-transaction --source-data=2</code>. It saves the binary log position (<code>mysql-bin.000001</code>, 1056), so B knows exactly where to continue. The dump was deleted after importing it.</li>
+                <li><code>GET_SOURCE_PUBLIC_KEY = 1</code> is needed because MySQL 8 uses the <code>caching_sha2_password</code> login method.</li>
+            </ul>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ man replication-vs-backup</span>
+            <p>
+                Replication is not a backup. It copies every change to B within a second, including also mistakes.
+                If someone runs <code>DELETE</code> or <code>DROP TABLE</code> on A, the same thing happens on
+                B right away, and there is no older version to go back on. Replication protects against losing
+                a server, but backups protect against losing the data. That is why the website files are backed up
+                as timestamped archives, which keep the history of the last two days.
+            </p>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ cat test-results.txt</span>
+            <div class="table-wrap">
+            <table>
+                <tr><th>Test</th><th>Result</th></tr>
+                <tr><td>Both pages are public</td><td class="pending">TODO</td></tr>
+                <tr><td>Loading A updates B</td><td>B showed 85. After four page loads on A, B showed 89 without doing anything on B. <span class="OK">OK</span></td></tr>
+                <tr><td>Loading B does not increment</td><td class="pending">TODO</td></tr>
+                <tr><td>B is read-only</td><td><code>UPDATE viikko2.counter ...</code> as root on B: <code>ERROR 1290 ... --super-read-only</code>. <span class="OK">OK</span></td></tr>
+                <tr><td>Replication status</td><td><code>Replica_IO_Running: Yes</code>, <code>Replica_SQL_Running: Yes</code>, <code>Seconds_Behind_Source: 0</code>, no errors. <span class="OK">OK</span></td></tr>
+                <tr><td>Two scheduled backups</td><td class="pending">TODO</td></tr>
+                <tr><td>Restore test</td><td class="pending">TODO</td></tr>
+                <tr><td>Reboot of server B</td><td class="pending">TODO</td></tr>
+            </table>
+            </div>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ cat lesson-learned.txt</span>
+            <p>
+                After writing B's <code>replication.cnf</code> with nano and restarting MySQL,
+                <code>SELECT @@server_id, @@read_only</code> still returned 1 and 0. The file looked fine in
+                nano, but <code>cat</code> showed that all settings were on one long line. The line breaks
+                were lost when I pasted the text, and MySQL ignored the broken line without any error.
+                <code>my_print_defaults mysqld</code> confirmed that MySQL did not read my settings. I wrote
+                the file again with <code>printf '%s\n' ... | sudo tee</code>, checked it with
+                <code>cat -A</code> (every line must end with <code>$</code>), and after a restart the result was
+                2, 1, 1. The lesson: always check that a config change is really in use =D
+            </p>
+        </div>
+
+        <div class="block">
+            <span class="prompt">$ ls links/</span>
+            <div class="links">
+                <a class="link week" href="http://195.148.21.192/viikko2/">
+                    <span class="label">Server A counter →</span>
+                    <span class="sub">Week 2 page, +1 on every load</span>
+                </a>
+                <a class="link replica" href="http://128.214.255.14/viikko4/">
+                    <span class="label">Server B replica ↻</span>
+                    <span class="sub">This page, read-only</span>
+                </a>
+                <a class="link github" href="https://github.com/emilhalonen/Linux_Administration_TVT26KMO/tree/main/viikko4">
+                    <span class="label">Source code →</span>
+                    <span class="sub">Week 4 on GitHub</span>
+                </a>
+            </div>
+        </div>
+
+        <span class="prompt">$ <span class="cursor">█</span></span>
+    </div>
+</div>
+</body>
+</html>

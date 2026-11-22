@@ -1,0 +1,7 @@
+# Server A (source): /etc/mysql/mysql.conf.d/replication.cnf
+[mysqld]
+server-id = 1
+log_bin = mysql-bin
+binlog_format = ROW
+binlog_expire_logs_seconds = 604800
+bind-address = 127.0.0.1,192.168.1.228

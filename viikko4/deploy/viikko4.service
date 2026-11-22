@@ -1,0 +1,15 @@
+[Unit]
+Description=Week 4 read-only replica page (Gunicorn)
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/linux-admin/viikko4
+EnvironmentFile=/etc/viikko4.env
+ExecStart=/home/ubuntu/linux-admin/viikko4/venv/bin/gunicorn --workers 1 --bind 127.0.0.1:5001 app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
